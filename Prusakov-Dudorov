@@ -1,1 +1,113 @@
-Prusakov-Dudorov
+import os
+import json
+from tkinter import Tk, filedialog, Text, Button, Entry, Label, messagebox, Toplevel
+
+# Глобальные переменные для хранения текстового содержимого и пути к файлу
+text_content = None
+file_path = None
+
+# Первая функция: сканирует папку и выдает список всех файлов
+def scan_directory():
+    folder_path = filedialog.askdirectory(title="Выберите папку")
+    if folder_path:
+        files = os.listdir(folder_path)
+        print("Список файлов в папке:")
+        for file in files:
+            print(file)
+
+# Вторая функция: открывает текстовый файл в текстовом окне для редактирования
+def open_text_file():
+    global text_content, file_path
+    file_path = filedialog.askopenfilename(title="Выберите текстовый файл", filetypes=[("Text Files", "*.txt")])
+    if file_path:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            text = file.read()
+        text_content.delete("1.0", "end")
+        text_content.insert("1.0", text)
+
+# Третья функция: сохраняет содержимое текстового поля в текстовый файл
+def save_text_file():
+    global text_content, file_path
+    if file_path:
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(text_content.get("1.0", "end"))
+        messagebox.showinfo("Сохранено", "Файл успешно сохранен")
+    else:
+        messagebox.showerror("Ошибка", "Файл не был открыт")
+
+# Четвертая функция: сохраняет данные с формы в файл
+def save_form_data():
+    data = {}
+    data['Поле 1'] = entry1.get()
+    data['Поле 2'] = entry2.get()
+    data['Поле 3'] = entry3.get()
+    data['Поле 4'] = entry4.get()
+    data['Поле 5'] = entry5.get()
+    
+    file_path = filedialog.asksaveasfilename(title="Сохраните файл", defaultextension=".json", filetypes=[("JSON files", "*.json")])
+    if file_path:
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                existing_data = json.load(file)
+        else:
+            existing_data = []
+        
+        existing_data.append(data)
+        
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(existing_data, file, ensure_ascii=False, indent=4)
+        messagebox.showinfo("Сохранено", "Данные успешно сохранены")
+
+# Пятая функция: считывает данные из файла и выводит имя и значение второго поля
+def read_and_display_data():
+    file_path = filedialog.askopenfilename(title="Выберите файл с данными", filetypes=[("JSON files", "*.json")])
+    if file_path:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        
+        count = len(data)
+        if count > 1 and 'Поле 2' in data[1]:
+            messagebox.showinfo("Данные", f"Поле 2 - наименование: {data[1]['Поле 2']}")
+        else:
+            messagebox.showwarning("Ошибка", "Данные для второго поля не найдены")
+
+# Инициализация графического интерфейса
+root = Tk()
+root.title("Текстовый редактор и управление файлами")
+
+# Текстовое поле для редактирования
+text_content = Text(root, height=10, width=50)
+text_content.pack()
+
+# Кнопки для вызова функций
+Button(root, text="Сканировать папку", command=scan_directory).pack()
+Button(root, text="Открыть текстовый файл", command=open_text_file).pack()
+Button(root, text="Сохранить текстовый файл", command=save_text_file).pack()
+
+# Поля ввода для формы
+form_window = Toplevel(root)
+form_window.title("Форма данных")
+Label(form_window, text="Поле 1:").pack()
+entry1 = Entry(form_window)
+entry1.pack()
+
+Label(form_window, text="Поле 2:").pack()
+entry2 = Entry(form_window)
+entry2.pack()
+
+Label(form_window, text="Поле 3:").pack()
+entry3 = Entry(form_window)
+entry3.pack()
+
+Label(form_window, text="Поле 4:").pack()
+entry4 = Entry(form_window)
+entry4.pack()
+
+Label(form_window, text="Поле 5:").pack()
+entry5 = Entry(form_window)
+entry5.pack()
+
+Button(form_window, text="Сохранить данные формы", command=save_form_data).pack()
+Button(form_window, text="Прочитать данные и вывести второе поле", command=read_and_display_data).pack()
+
+root.mainloop()
